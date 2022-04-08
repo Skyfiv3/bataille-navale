@@ -1,0 +1,371 @@
+#tir par salve
+#multijoueur et single Player
+#graphiques a repreeeeeendre
+#bateaux restant
+
+"""
+
+
+"""
+
+
+from importlib.machinery import WindowsRegistryFinder
+import pygame, time, sys                                                                                                                                                           
+import numpy as np
+from pygame.locals import* #(
+#     K_UP,
+#     K_DOWN,
+#     K_RIGHT,
+#     K_LEFT,
+#     K_ESCAPE,
+#     K_SPACE,
+#     KEYDOWN,
+#     K_r,
+#     QUIT
+# )
+
+pygame.init()
+clock = pygame.time.Clock()
+
+BackgroundEntree = pygame.image.load("Bordel/bataille navale/images/background entree.png")
+BackgroundPlacement = pygame.image.load("Bordel/bataille navale/images/background placement.png")
+CurseurBateaux = pygame.image.load("Bordel/bataille navale/images/curseur bateau.png")
+CurseurPositionPlacement = pygame.image.load("Bordel/bataille navale/images/curseur position placement.png")
+CurseurPositionJeu = pygame.image.load("Bordel/bataille navale/images/curseur position jeu.png")
+Joueur1 = pygame.image.load("Bordel/bataille navale/images/joueur 1.png")
+Joueur2 = pygame.image.load("Bordel/bataille navale/images/joueur 2.png")
+MarqueurBateauPlacement = pygame.image.load("Bordel/bataille navale/images/marqueur bateau placement.png")
+MarqueurBateauJeu = pygame.image.load("Bordel/bataille navale/images/marqueur bateau jeu.png")
+MarqueurTouché = pygame.image.load("Bordel/bataille navale/images/marqueur touché.png")
+MarqueurALEau = pygame.image.load("Bordel/bataille navale/images/marqueur à l'eau.png")
+MarqueurCoulé = pygame.image.load("Bordel/bataille navale/images/marqueur coulé.png")
+Grilles = pygame.image.load("Bordel/bataille navale/images/grille jeu.png")
+PageAttente = pygame.image.load("Bordel/bataille navale/images/page attente.png")
+
+
+def PLAYER(joueur) :
+    global Player, tableau_player_int, tableau_player_ext, tableau_non_player_int, tableau_non_player_ext
+    
+    if joueur == 1 :
+        Player = Joueur1
+        tableau_player_int = tableau_joueur1_int
+        tableau_player_ext = tableau_joueur1_ext
+        tableau_non_player_int = tableau_joueur2_int
+        tableau_non_player_ext = tableau_joueur2_ext
+        
+    if joueur == 2 :
+        Player = Joueur2
+        tableau_player_int = tableau_joueur2_int
+        tableau_player_ext = tableau_joueur2_ext
+        tableau_non_player_int = tableau_joueur1_int
+        tableau_non_player_ext = tableau_joueur1_ext
+
+def MARQUEURS(joueur):
+    #global compte_tir
+    compte_tir = 0
+
+    window.blit(Grilles, (0, 0))
+    window.blit(Player, (570, 50))
+    for x in range(14): #affichage des marqueurs
+        for y in range(14):                
+            if tableau_player_int[x,y] == 1 :
+                window.blit(MarqueurBateauJeu,(99 + x*39.7, 195 + y*39.7))
+            if tableau_player_int[x,y] == 2 :
+                window.blit(MarqueurALEau,(99 + x*39.7, 195 + y*39.7))
+            if tableau_player_int[x,y] == 3 :
+                window.blit(MarqueurTouché,(99 + x*39.7, 195 + y*39.7))
+            if tableau_player_int[x,y] == 4 :
+                window.blit(MarqueurCoulé,(99 + x*39.7, 195 + y*39.7))
+
+            if tableau_non_player_ext[x,y] == 1 :
+                window.blit(MarqueurBateauJeu,(94 + x*39.7, 190 + y*39.7))
+            if tableau_non_player_ext[x,y] == 2 :
+                window.blit(MarqueurALEau,(94 + x*39.7, 190 + y*39.7))
+            if tableau_non_player_ext[x,y] == 3 :
+                window.blit(MarqueurTouché,(94 + x*39.7, 190 + y*39.7))
+            if tableau_non_player_ext[x,y] == 4 :
+                window.blit(MarqueurCoulé,(94 + x*39.7, 190 + y*39.7))
+            
+            if tableau_player_ext[x,y] == 1 :
+                window.blit(MarqueurBateauJeu,(786 + x*39.7, 189 + y*39.7))
+            if tableau_player_ext[x,y] == 2 :
+                window.blit(MarqueurALEau,(786 + x*39.7, 189 + y*39.7))
+            if tableau_player_ext[x,y] == 3 :
+                window.blit(MarqueurTouché,(786 + x*39.7, 189 + y*39.7))
+                compte_tir += 1
+            if tableau_player_ext[x,y] == 4 :
+                window.blit(MarqueurCoulé,(786 + x*39.7, 189 + y*39.7))
+                
+
+
+def PAGE_INTRO():
+    
+    y_background = 0
+    
+    running_entree = True
+    while running_entree :
+        window.blit(BackgroundEntree, (0, y_background))
+
+        for event in pygame.event.get() :
+            if event.type == QUIT :
+                sys.exit(1)
+            if event.type == KEYDOWN :
+                if event.key == K_ESCAPE :
+                    sys.exit(1)
+
+                if event.key == K_SPACE :
+                    while y_background > -800 :
+                        window.blit(BackgroundEntree, (0, y_background))
+                        y_background -= 10
+                        pygame.display.flip()
+                    return
+
+        clock.tick(60)
+        pygame.display.flip()
+
+
+
+def PAGE_PLACEMENT(joueur):
+
+    PLAYER(joueur)
+
+    running_placement = True
+    while running_placement :        
+
+        for i in range(5): #pour les 5 bateaux a mettre
+            test_placement = False
+            y_position = 0
+            x_position = 0
+            timer = 0
+            rotation = 0
+
+            nombre_case = 5-i
+            if nombre_case == 2 :
+                nombre_case = 3
+            elif nombre_case == 1:
+                nombre_case = 2
+
+            while not test_placement :
+                window.blit(BackgroundPlacement, (0, 0))
+
+                global CurseurBateaux
+                CurseurBateaux = pygame.transform.scale(CurseurBateaux, (325 - 45*i, 5))
+                window.blit(CurseurBateaux, (30 + 17*i, 370 + 100*i))
+
+                window.blit(Player, (15, 53))
+                for x in range(14): #affichage des marqueurs
+                    for y in range(14):
+                        if tableau_player_int[x,y] == 1 :
+                            window.blit(MarqueurBateauPlacement,(475 + x*50, 78 + y*50))
+
+                    
+                if x_position > 13 - (nombre_case - 1)*abs(rotation - 1) :
+                    x_position = 13 - (nombre_case - 1)*abs(rotation - 1)
+                if x_position < 0 :
+                    x_position = 0
+                if y_position > 13 - (nombre_case - 1)*rotation :
+                    y_position = 13 - (nombre_case - 1)*rotation
+                if y_position < 0 :
+                    y_position = 0
+
+                if timer == 61 :
+                    timer = 0
+                if timer < 30 : #déplacement du curseur de sélection pour les positions des bateaux
+                    CurseurPositionPlacement.set_alpha(timer*6.5)
+                else :
+                    CurseurPositionPlacement.set_alpha(195 - (timer-30)*6.5)
+                for j in range(nombre_case):
+                    window.blit(CurseurPositionPlacement, (x_position*50 + 475 + j*50*abs(rotation - 1), y_position*50 + 78 + j*50*rotation))
+
+
+                for event in pygame.event.get() :
+                    if event.type == KEYDOWN :
+                        if event.key == K_ESCAPE :
+                            sys.exit(1)            
+                        if event.key == K_RIGHT :
+                            x_position += 1
+                        if event.key == K_LEFT :
+                            x_position -= 1
+                        if event.key == K_UP :
+                            y_position -= 1
+                        if event.key == K_DOWN :
+                            y_position += 1
+                        if event.key == K_r :
+                            rotation = abs(rotation - 1) #faire passer rotation de 0 a 1 ou inversement
+
+                        if event.key == K_SPACE :
+                            for j in range(nombre_case):
+                                tableau_player_int[x_position + j*abs(rotation - 1), y_position + j*(rotation)] = 1
+                            test_placement = True
+
+                    if event.type == QUIT :
+                        sys.exit(1)
+
+                timer += 1
+                clock.tick(60)
+                pygame.display.flip()
+
+        return
+
+
+
+def PAGE_JEU(joueur):
+
+    PLAYER(joueur)
+
+    y_page_attente = 0
+    running_attente = True
+    while running_attente :
+        window.blit(Grilles, (0, 0))
+        window.blit(Player, (570, 50))
+        window.blit(PageAttente, (0, y_page_attente))
+        window.blit(Player, (570, y_page_attente + 350))
+
+        for event in pygame.event.get() :
+            if event.type == QUIT :
+                sys.exit(1)
+            if event.type == KEYDOWN :
+                if event.key == K_ESCAPE :
+                    sys.exit(1)
+
+                if event.key == K_SPACE :
+                    while y_page_attente > -800 :
+                        window.blit(Grilles, (0, 0))
+                        window.blit(Player, (570, 50))
+                        window.blit(PageAttente, (0, y_page_attente))
+                        window.blit(Player, (570, y_page_attente + 350))
+                        y_page_attente -= 12
+                        pygame.display.flip()
+                    running_attente = False
+                
+        clock.tick(60)
+        pygame.display.flip()
+
+    global compte_tir, compte_bateau
+    compte_tir = 0
+    timer = 0
+    y_position = 0
+    x_position = 0
+    running_grilles = True
+    while running_grilles :
+
+        MARQUEURS(joueur)
+
+        if x_position > 13 :
+            x_position = 13
+        if x_position < 0 :
+            x_position = 0
+        if y_position > 13 :
+            y_position = 13
+        if y_position < 0 :
+            y_position = 0  
+
+        if timer == 61 :
+            timer = 0
+        if timer < 30 : #déplacement du curseur de sélection pour les positions des bateaux
+            CurseurPositionJeu.set_alpha(timer*6.5)
+        else :
+            CurseurPositionJeu.set_alpha(195 - (timer-30)*6.5)
+
+        window.blit(CurseurPositionJeu, (x_position*39.7 + 786, y_position*39.7 + 189))
+
+
+        for event in pygame.event.get() :
+            if event.type == QUIT :
+                sys.exit(1)
+            if event.type == KEYDOWN :
+                if event.key == K_ESCAPE :
+                    sys.exit(1)
+                if event.key == K_RIGHT :
+                    x_position += 1
+                if event.key == K_LEFT :
+                    x_position -= 1
+                if event.key == K_UP :
+                    y_position -= 1
+                if event.key == K_DOWN :
+                    y_position += 1
+                if event.key == K_SPACE :
+                    if tableau_non_player_int[x_position, y_position] == 0 or 1 :
+                        tableau_player_ext[x_position, y_position] = tableau_non_player_int[x_position, y_position] + 2
+                        
+                    running_grilles = False
+
+        timer += 1
+        clock.tick(60)
+        pygame.display.flip()
+
+    
+    for k in range(120): #affichage du tir
+
+        MARQUEURS(joueur)
+        pygame.display.flip()
+        clock.tick(60)
+
+    if compte_tir > 15 :
+        global fin, winner
+        fin = True
+        winner = joueur
+
+    return        
+
+
+
+def PAGE_FIN() :
+    pagefin = pygame.image.load("bataille navale/images/page fin.png")
+    Joueur1 = pygame.image.load("bataille navale/images/joueur 1.png")
+    Joueur2 = pygame.image.load("bataille navale/images/joueur 2.png")
+    if winner == 1 :
+        nomgagnant = Joueur1
+    if winner == 2 :
+        nomgagnant = Joueur2
+
+    running_page_fin = True
+    while running_page_fin :
+        window.blit(pagefin, (0, 0))
+        window.blit(nomgagnant, (380, 212))
+        
+        for event in pygame.event.get() :
+            if event.type == QUIT :
+                sys.exit(1)
+            if event.type == KEYDOWN :
+                if event.key == K_ESCAPE :
+                    sys.exit(1)
+                
+        pygame.display.flip()
+
+
+
+if __name__=='__main__':
+    window_largeur = 1380
+    window_hauteur = 800
+    window = pygame.display.set_mode([window_largeur, window_hauteur])
+    global tableau_joueur1_int
+    global tableau_joueur2_int
+    global tableau_joueur1_ext
+    global tableau_joueur2_ext
+    tableau_joueur1_int = np.zeros((14,14))
+    tableau_joueur2_int = np.zeros((14,14))
+    tableau_joueur1_ext = np.zeros((14,14))
+    tableau_joueur2_ext = np.zeros((14,14))
+
+    global fin, winner, compte_tir_1, compte_tir_2
+    fin = False
+    winner = 0
+
+    PAGE_INTRO()
+
+    PAGE_PLACEMENT(1)
+    PAGE_PLACEMENT(2)
+
+    compte_tir_1 = 0
+    compte_tir_2 = 0
+
+    compteur_tour = 0
+    while not fin :
+        if compteur_tour%2 == 0 :
+            PAGE_JEU(1)
+        else :
+            PAGE_JEU(2)
+        compteur_tour += 1
+
+    PAGE_FIN()
